@@ -7,7 +7,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..
 
 def getRemoteVersion():
     """curl's the version from VERSION of Github and returns it"""
-    url = "https://raw.githubusercontent.com/Maxilo92/Updates/main/VERSION"
+    url = "https://raw.githubusercontent.com/Maxilo92/Updates/release/VERSION"
     
     # print("suche nach updates...")
     result = subprocess.run(["curl", "-s", url], capture_output=True, text=True)
