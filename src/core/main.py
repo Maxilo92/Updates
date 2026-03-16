@@ -1,5 +1,15 @@
+from core.update import checkForUpdate
 
+def getCurVersion():
+    try:
+        f = open("VERSION")
+        v = f.readline()
+    except:
+        raise(FileNotFoundError("VERSION fehlt oder ist beschädigt"))
+    finally:
+        f.close()
+    return v
 
-VERSION = "0.0.1"
-
-print(f"Willkommen in Test App v{VERSION}")
+def main():
+    VERSION = getCurVersion()
+    print(f"Willkommen in Test App v{VERSION}")
