@@ -1,15 +1,11 @@
-from core.update import checkForUpdates
+from core.update import checkForUpdates,getLocalVersion
 
-def getCurVersion():
-    try:
-        f = open("VERSION")
-        v = f.readline()
-    except:
-        raise(FileNotFoundError("VERSION fehlt oder ist beschädigt"))
-    finally:
-        f.close()
-    return v
+
+
 
 def main():
-    VERSION = getCurVersion()
+    VERSION = getLocalVersion()
     print(f"Willkommen in Test App v{VERSION}")
+
+    checkForUpdates()
+  
