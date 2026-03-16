@@ -30,13 +30,29 @@ def getLocalVersion():
         raise FileNotFoundError("VERSION fehlt oder ist beschädigt")
 
 
+def compareVersions(v1, v2):
+    """Compares semantic versions like 0.0.3. Returns 1, 0, -1."""
+    def parse(v):
+        parts = v.strip().split(".")
+        return tuple(int(p) for p in parts)
+
+    a = parse(v1)
+    b = parse(v2)
+
+    if a > b:
+        return 1
+    if a < b:
+        return -1
+    return 0
+
+
 def searchForUpdates():
     """Compares the local and remote version. Returns remote version if newer, else empty str."""
     remoteVersion = getRemoteVersion()
     localVersion = getLocalVersion()
 
     print(f"remote: {remoteVersion}; local: {localVersion}")
-    if remoteVersion > localVersion:
+    if compareVersions(remoteVersion, localVersion) > 0:
         # update verfügbar
         return remoteVersion
     else:
@@ -45,12 +61,18 @@ def searchForUpdates():
 
 def checkForUpdates():
     """If update is found, asks user to update."""
-    updateAvailable = searchForUpdates()
-    if updateAvailable:
-        print(f"Update auf v{updateAvailable} verfügbar!")
-        choice = input(f"Auf v{updateAvailable} upgraden? (y/n): ").strip().lower()
+    remoteVersion = getRemoteVersion()
+    localVersion = getLocalVersion()
+    versionCmp = compareVersions(remoteVersion, localVersion)
+
+    print(f"remote: {remoteVersion}; local: {localVersion}")
+    if versionCmp > 0:
+        print(f"Update auf v{remoteVersion} verfügbar!")
+        choice = input(f"Auf v{remoteVersion} upgraden? (y/n): ").strip().lower()
         if choice == "y":
             initUpdate()
+    elif versionCmp < 0:
+        print("Update release")
     else:
         print("Kein Update gefunden, deine Version ist auf dem neusten stand.")
 
