@@ -1,4 +1,4 @@
-from core.update import checkForUpdate
+from core.update import checkForUpdates
 
 def getCurVersion():
     try:
