@@ -22,14 +22,12 @@ def getRemoteVersion():
     
 def getLocalVersion():
     """Reads the version from local VERSION and returns it"""
+    version_path = os.path.join(PROJECT_ROOT, "VERSION")
     try:
-        f = open("VERSION")
-        v = f.readline()
-    except:
-        raise(FileNotFoundError("VERSION fehlt oder ist beschädigt"))
-    finally:
-        f.close()
-    return v
+        with open(version_path) as f:
+            return f.readline().strip()
+    except FileNotFoundError:
+        raise FileNotFoundError("VERSION fehlt oder ist beschädigt")
 
 
 def searchForUpdates():
@@ -38,7 +36,7 @@ def searchForUpdates():
     localVersion = getLocalVersion()
 
     print(f"remote: {remoteVersion}; local: {localVersion}")
-    if remoteVersion.strip() > localVersion.strip():
+    if remoteVersion > localVersion:
         # update verfügbar
         return remoteVersion
     else:
@@ -53,50 +51,41 @@ def checkForUpdates():
         choice = input(f"Auf v{updateAvailable} upgraden? (y/n): ").strip().lower()
         if choice == "y":
             initUpdate()
-
     else:
         print("Kein Update gefunden, deine Version ist auf dem neusten stand.")
 
 def downloadUpdate():
     """Clones the release branch of the repository."""
     url = "https://github.com/Maxilo92/Updates.git"
-    destination = f"./.update-{getRemoteVersion()}"
+    destination = os.path.join(PROJECT_ROOT, f".update-{getRemoteVersion()}")
 
-    result = subprocess.run(["git", "clone", "-b", "release", url, destination], capture_output=True, text=True)
-    if result.returncode != 0:
-        print("Update bereits heruntergeladen.")
-        # raise RuntimeError(f"Klonen fehlgeschlagen: {result.stderr.strip()}")
+    if os.path.exists(destination):
+        print(f"Update bereits heruntergeladen.")
+    else:
+        result = subprocess.run(["git", "clone", "-b", "release", url, destination], capture_output=True, text=True)
+        if result.returncode != 0:
+            raise RuntimeError(f"Klonen fehlgeschlagen: {result.stderr.strip()}")
     print(f"Update wurde nach '{destination}' geklont.")
-
     return destination
 
 def installUpdate(new_version_path):
-    # Inhalte des geklonten Repos in das Projektverzeichnis kopieren.
+    """Copies files from the cloned update into PROJECT_ROOT, then restarts."""
     for entry in os.listdir(new_version_path):
-        if entry == ".git":
+        if entry in (".git",):
             continue
-
         src = os.path.join(new_version_path, entry)
         dst = os.path.join(PROJECT_ROOT, entry)
-
         if os.path.isdir(src):
             shutil.copytree(src, dst, dirs_exist_ok=True)
         else:
-            os.makedirs(os.path.dirname(dst), exist_ok=True)
             shutil.copy2(src, dst)
 
     shutil.rmtree(new_version_path, ignore_errors=True)
-
-    # Script neu starten (ersetzt den aktuellen Prozess)
     os.execv(sys.executable, [sys.executable] + sys.argv)
-
-    # Aufruf, sobald der Download von .update-0.0.2 fertig ist:
-    # finalize_update('.update-0.0.2')
 
 def initUpdate():
     updateDir = downloadUpdate()
     installUpdate(updateDir)
-
 
 if __name__ == "__main__":    
     updateAvailable = searchForUpdates()
